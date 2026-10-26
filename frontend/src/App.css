@@ -1,0 +1,1867 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* ==================================================
+   1. GLOBAL THEME, FONTS, AND CSS VARIABLES
+   ================================================== */
+:root {
+
+  font-family: "Inter", sans-serif;
+
+  color: #f5f5f7;
+
+  background: #0b0c10;
+
+  font-synthesis: none;
+
+  text-rendering: optimizeLegibility;
+
+  -webkit-font-smoothing: antialiased;
+
+  -moz-osx-font-smoothing: grayscale;
+
+  --bg: #0b0c10;
+
+  --panel: #13151b;
+
+  --border: #292b33;
+
+  --muted: #9295a1;
+
+  --accent: #ff4655;
+
+}
+
+* {
+
+  box-sizing: border-box;
+
+}
+
+/* ==================================================
+   2. GLOBAL RESET AND BASE ELEMENT STYLES
+   ================================================== */
+body {
+
+  margin: 0;
+
+  min-width: 320px;
+
+  min-height: 100vh;
+
+}
+
+button,
+
+input {
+
+  font: inherit;
+
+}
+
+button,
+
+a {
+
+  -webkit-tap-highlight-color: transparent;
+
+}
+
+/* ==================================================
+   3. APP SHELL, HEADER, BRANDING, AND FOOTER
+   ================================================== */
+.app-shell {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  flex-direction: column;
+
+  background:
+
+    radial-gradient(ellipse at 50% 0%, rgb(255 70 85 / 7%), transparent 40%),
+
+    var(--bg);
+
+}
+
+.topbar {
+
+  height: 76px;
+
+  padding: 0 7%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  border-bottom: 1px solid var(--border);
+
+  background: rgb(11 12 16 / 88%);
+
+}
+
+.brand {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  color: #fff;
+
+  text-decoration: none;
+
+  font-size: 16px;
+
+  font-weight: 800;
+
+  letter-spacing: 2px;
+
+}
+
+.brand-mark {
+
+  width: 34px;
+
+  height: 34px;
+
+  display: grid;
+
+  place-items: center;
+
+  background: var(--accent);
+
+  color: white;
+
+  font-family: "Barlow Condensed", sans-serif;
+
+  font-size: 26px;
+
+  font-weight: 800;
+
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+
+}
+
+.brand-accent {
+
+  color: var(--accent);
+
+}
+
+.topbar-label,
+
+.section-tag {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  color: #c0c1ca;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.7px;
+
+}
+
+.live-dot {
+
+  display: inline-block;
+
+  width: 7px;
+
+  height: 7px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #60d394;
+
+  box-shadow: 0 0 12px rgb(96 211 148 / 35%);
+
+}
+
+.main-content {
+
+  width: min(1100px, 86%);
+
+  margin: 0 auto;
+
+  flex: 1;
+
+}
+
+/* ==================================================
+   4. HERO SECTION AND PLAYER SEARCH FORM
+   ================================================== */
+.hero {
+
+  padding: 86px 0 70px;
+
+  text-align: center;
+
+}
+
+.eyebrow {
+
+  margin: 0 0 13px;
+
+  color: var(--accent);
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: 2.5px;
+
+}
+
+.hero h1 {
+
+  margin: 0;
+
+  font-family: "Barlow Condensed", sans-serif;
+
+  font-size: clamp(52px, 7vw, 82px);
+
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: -1.5px;
+
+  text-transform: uppercase;
+
+}
+
+.hero h1 span {
+
+  color: var(--accent);
+
+}
+
+.hero-description {
+
+  margin: 18px 0 30px;
+
+  color: #a5a7b1;
+
+  font-size: 14px;
+
+  line-height: 1.7;
+
+}
+
+.search-form {
+
+  width: min(680px, 100%);
+
+  min-height: 62px;
+
+  margin: 0 auto;
+
+  padding: 7px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  background: #15171d;
+
+  border: 1px solid #363842;
+
+  border-radius: 7px;
+
+  transition: border-color 160ms ease;
+
+}
+
+.search-form:focus-within {
+
+  border-color: var(--accent);
+
+}
+
+.search-icon {
+
+  padding-left: 12px;
+
+  color: #9295a1;
+
+  font-size: 26px;
+
+}
+
+.search-form input {
+
+  width: 100%;
+
+  min-width: 0;
+
+  border: 0;
+
+  outline: 0;
+
+  color: #fff;
+
+  background: transparent;
+
+  font-size: 13px;
+
+}
+
+.search-form input::placeholder {
+
+  color: #777a86;
+
+}
+
+.search-form button {
+
+  min-height: 44px;
+
+  flex-shrink: 0;
+
+  padding: 0 19px;
+
+  border: 0;
+
+  border-radius: 4px;
+
+  background: var(--accent);
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.6px;
+
+  transition: background 150ms ease, opacity 150ms ease;
+
+}
+
+.search-form button:hover {
+
+  background: #e93a49;
+
+}
+
+.search-form button:disabled {
+
+  cursor: wait;
+
+  opacity: 0.7;
+
+}
+
+.search-hint {
+
+  margin-top: 13px;
+
+  color: #737682;
+
+  font-size: 11px;
+
+}
+
+/* ==================================================
+   5. EMPTY STATES, ERROR MESSAGES, AND LOADING SPINNER
+   ================================================== */
+.empty-state {
+
+  padding: 35px 15px 65px;
+
+  text-align: center;
+
+}
+
+.crosshair {
+
+  width: 52px;
+
+  height: 52px;
+
+  margin: 0 auto 16px;
+
+  display: grid;
+
+  place-items: center;
+
+  border: 1px solid #343640;
+
+  border-radius: 50%;
+
+  color: var(--accent);
+
+  font-size: 31px;
+
+}
+
+.empty-state h2 {
+
+  margin: 0;
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+}
+
+.empty-state p {
+
+  color: var(--muted);
+
+  font-size: 12px;
+
+  line-height: 1.7;
+
+}
+
+.message {
+
+  width: min(680px, 100%);
+
+  margin: 0 auto 30px;
+
+  padding: 15px 17px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 6px;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+
+}
+
+.error-message {
+
+  color: #ffb5bc;
+
+  border-color: rgb(255 70 85 / 35%);
+
+  background: rgb(255 70 85 / 7%);
+
+}
+
+.error-message > span {
+
+  display: grid;
+
+  width: 19px;
+
+  height: 19px;
+
+  flex-shrink: 0;
+
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: var(--accent);
+
+  color: #fff;
+
+  font-weight: 800;
+
+}
+
+.loading-message {
+
+  color: #d6d7df;
+
+}
+
+.spinner {
+
+  width: 16px;
+
+  height: 16px;
+
+  flex-shrink: 0;
+
+  border: 2px solid #484b56;
+
+  border-top-color: var(--accent);
+
+  border-radius: 50%;
+
+  animation: spin 700ms linear infinite;
+
+}
+
+@keyframes spin {
+
+  to {
+
+    transform: rotate(360deg);
+
+  }
+
+}
+
+/* ==================================================
+   6. PLAYER PROFILE, RANK, AND SEASON BANNER
+   ================================================== */
+.profile-section {
+
+  padding: 0 0 70px;
+
+}
+
+.profile-header {
+
+  padding: 26px;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 25px;
+
+  background: linear-gradient(115deg, #191b23, #111218);
+
+  border: 1px solid var(--border);
+
+  border-radius: 9px;
+
+}
+
+.player-identity {
+
+  min-width: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 20px;
+
+}
+
+.player-avatar {
+
+  width: 84px;
+
+  height: 84px;
+
+  flex-shrink: 0;
+
+  object-fit: cover;
+
+  border: 1px solid #464954;
+
+  border-radius: 6px;
+
+  background: #20222b;
+
+}
+
+.avatar-fallback {
+
+  display: grid;
+
+  place-items: center;
+
+  color: var(--accent);
+
+  font-size: 35px;
+
+  font-weight: 800;
+
+}
+
+.player-info h2 {
+
+  margin: 0;
+
+  overflow-wrap: anywhere;
+
+  font-size: clamp(19px, 3vw, 27px);
+
+  font-weight: 800;
+
+}
+
+.player-meta {
+
+  margin: 9px 0 0;
+
+  color: #a3a6b2;
+
+  font-size: 11px;
+
+}
+
+.rank-panel {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+}
+
+.rank-icon {
+
+  width: 65px;
+
+  height: 65px;
+
+  object-fit: contain;
+
+}
+
+.rank-panel h3 {
+
+  margin: 0;
+
+  font-family: "Barlow Condensed", sans-serif;
+
+  font-size: 27px;
+
+  text-transform: uppercase;
+
+}
+
+.rank-rating {
+
+  margin: 4px 0 0;
+
+  color: #e7bd77;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+}
+
+.stat-label {
+
+  margin: 0 0 9px;
+
+  color: #8f93a0;
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  letter-spacing: 1.4px;
+
+}
+
+.season-banner {
+
+  margin: 14px 0 38px;
+
+  padding: 13px 16px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  background: #12141a;
+
+  border: 1px solid var(--border);
+
+  border-radius: 5px;
+
+  color: #d4d5dd;
+
+  font-size: 11px;
+
+}
+
+.season-playlist {
+
+  margin-left: auto;
+
+  color: #8f93a0;
+
+}
+
+/* ==================================================
+   7. SECTION HEADINGS AND SHARED LABELS
+   ================================================== */
+.section-heading {
+
+  margin-bottom: 20px;
+
+  display: flex;
+
+  align-items: end;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+}
+
+.section-heading .eyebrow {
+
+  margin-bottom: 7px;
+
+}
+
+.section-heading h2 {
+
+  margin: 0;
+
+  font-size: 21px;
+
+  font-weight: 800;
+
+}
+
+.section-tag {
+
+  padding: 8px 10px;
+
+  border: 1px solid #373944;
+
+  border-radius: 4px;
+
+  color: #a4a6b0;
+
+  font-size: 9px;
+
+  white-space: nowrap;
+
+}
+
+/* ==================================================
+   8. PLAYER STATISTICS CARDS
+   ================================================== */
+.stats-grid {
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 13px;
+
+}
+
+.stat-card {
+
+  min-height: 125px;
+
+  padding: 21px;
+
+  background: linear-gradient(145deg, #171920, #121319);
+
+  border: 1px solid var(--border);
+
+  border-radius: 7px;
+
+  transition: border-color 160ms ease, transform 160ms ease;
+
+}
+
+.stat-card:hover {
+
+  transform: translateY(-2px);
+
+  border-color: #484b58;
+
+}
+
+.stat-card h3 {
+
+  margin: 0;
+
+  font-family: "Barlow Condensed", sans-serif;
+
+  font-size: 35px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.2px;
+
+}
+
+.stat-detail {
+
+  display: block;
+
+  margin-top: 6px;
+
+  color: #8d909d;
+
+  font-size: 10px;
+
+}
+
+/* ==================================================
+   9. DATA SOURCE NOTE
+   ================================================== */
+.data-note {
+
+  margin-top: 20px;
+
+  color: #777a86;
+
+  font-size: 10px;
+
+  line-height: 1.7;
+
+}
+
+.footer {
+
+  min-height: 68px;
+
+  padding: 20px 7%;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 15px;
+
+  border-top: 1px solid var(--border);
+
+  color: #8b8e99;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.3px;
+
+}
+
+/* ==================================================
+   10. RESPONSIVE LAYOUT: TABLETS AND MOBILE
+   ================================================== */
+@media (max-width: 700px) {
+
+  .topbar {
+
+    height: 65px;
+
+    padding: 0 5%;
+
+  }
+
+  .topbar-label {
+
+    font-size: 8px;
+
+    letter-spacing: 1px;
+
+  }
+
+  .main-content {
+
+    width: 90%;
+
+  }
+
+  .hero {
+
+    padding: 65px 0 45px;
+
+  }
+
+  .hero-description {
+
+    max-width: 340px;
+
+    margin: 17px auto 25px;
+
+  }
+
+  .search-form {
+
+    gap: 7px;
+
+  }
+
+  .search-form button {
+
+    padding: 0 11px;
+
+    font-size: 9px;
+
+  }
+
+  .search-icon {
+
+    padding-left: 7px;
+
+  }
+
+  .profile-header {
+
+    padding: 19px;
+
+    align-items: flex-start;
+
+    flex-direction: column;
+
+  }
+
+  .player-avatar {
+
+    width: 65px;
+
+    height: 65px;
+
+  }
+
+  .rank-icon {
+
+    width: 49px;
+
+    height: 49px;
+
+  }
+
+  .rank-panel h3 {
+
+    font-size: 23px;
+
+  }
+
+  .season-banner {
+
+    flex-wrap: wrap;
+
+  }
+
+  .stats-grid {
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 9px;
+
+  }
+
+  .stat-card {
+
+    min-height: 108px;
+
+    padding: 15px;
+
+  }
+
+  .stat-card h3 {
+
+    font-size: 30px;
+
+  }
+
+  .section-heading h2 {
+
+    font-size: 17px;
+
+  }
+
+  .section-tag {
+
+    font-size: 8px;
+
+  }
+
+  .footer {
+
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    padding: 20px 5%;
+
+  }
+
+}
+
+@media (max-width: 380px) {
+
+  .topbar-label {
+
+    display: none;
+
+  }
+
+  .search-form button {
+
+    max-width: 115px;
+
+    white-space: normal;
+
+  }
+
+  .section-tag {
+
+    display: none;
+
+  }
+
+}
+
+/* ================================MATCH HISTORY=============================== */
+
+.match-history {
+
+  margin-top: 42px;
+
+  width: 100%;
+
+}
+
+.match-history .section-heading {
+
+  margin-bottom: 20px;
+
+}
+
+.match-list {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+}
+
+.match-card {
+
+  --match-accent: #8b8b98;
+
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns: 100px minmax(130px, 1.25fr) minmax(95px, 0.8fr) minmax(110px, 1fr) minmax(180px, 1.4fr);
+
+  align-items: center;
+
+  gap: 18px;
+
+  min-width: 0;
+
+  padding: 16px 20px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.075);
+
+  border-radius: 12px;
+
+  background: #14141b;
+
+  transition:
+
+    border-color 180ms ease,
+
+    transform 180ms ease,
+
+    background 180ms ease;
+
+}
+
+.match-card:hover {
+
+  transform: translateY(-2px);
+
+  border-color: rgba(255, 255, 255, 0.18);
+
+  background: #191922;
+
+}
+
+.match-card::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0 auto 0 0;
+
+  width: 3px;
+
+  background: var(--match-accent);
+
+}
+
+.match-card.match-win {
+
+  --match-accent: #36d399;
+
+}
+
+.match-card.match-loss {
+
+  --match-accent: #fb7185;
+
+}
+
+.match-map-image {
+
+  position: relative;
+
+  width: 100px;
+
+  height: 72px;
+
+  overflow: hidden;
+
+  border-radius: 7px;
+
+  background: #252530;
+
+}
+
+.match-map-image img {
+
+  display: block;
+
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 200ms ease;
+
+}
+
+.match-card:hover .match-map-image img {
+
+  transform: scale(1.06);
+
+}
+
+.match-result {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  gap: 5px;
+
+  min-width: 0;
+
+}
+
+.result-label {
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+
+}
+
+.result-win {
+
+  color: #36d399;
+
+}
+
+.result-loss {
+
+  color: #fb7185;
+
+}
+
+.match-result > strong {
+
+  color: #f4f4f7;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  overflow-wrap: anywhere;
+
+}
+
+.match-result > span:not(.result-label) {
+
+  color: #a0a0b0;
+
+  font-size: 12px;
+
+}
+
+.match-result small {
+
+  color: #777787;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+
+}
+
+.match-agent {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 6px;
+
+  min-width: 0;
+
+}
+
+.match-agent img {
+
+  width: 48px;
+
+  height: 48px;
+
+  border-radius: 9px;
+
+  object-fit: cover;
+
+  background: #252530;
+
+}
+
+.match-agent span {
+
+  color: #c9c9d4;
+
+  font-size: 12px;
+
+  text-align: center;
+
+  overflow-wrap: anywhere;
+
+}
+
+.match-kda {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 6px;
+
+  min-width: 0;
+
+}
+
+.match-kda strong {
+
+  color: #f4f4f7;
+
+  font-size: 16px;
+
+  font-weight: 750;
+
+  font-variant-numeric: tabular-nums;
+
+  white-space: nowrap;
+
+}
+
+.match-kda span,
+
+.match-extra-stats span {
+
+  color: #89899a;
+
+  font-size: 10px;
+
+  letter-spacing: 0.8px;
+
+  text-transform: uppercase;
+
+}
+
+.match-extra-stats {
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+
+  min-width: 0;
+
+}
+
+.match-extra-stats > div {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 7px;
+
+  min-width: 0;
+
+}
+
+.match-extra-stats strong {
+
+  color: #e7e7ef;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+
+  overflow-wrap: anywhere;
+
+}
+
+/* Match history: tablet */
+
+@media (max-width: 1000px) {
+
+  .match-card {
+
+    grid-template-columns: 84px minmax(100px, 1fr) 65px minmax(95px, auto);
+
+    gap: 14px;
+
+    padding: 14px 16px;
+
+  }
+
+  .match-map-image {
+
+    width: 84px;
+
+    height: 66px;
+
+  }
+
+  .match-agent img {
+
+    width: 40px;
+
+    height: 40px;
+
+  }
+
+  .match-extra-stats {
+
+    grid-column: 2 / -1;
+
+    padding-top: 12px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+  }
+
+}
+
+/* Match history: mobile */
+
+@media (max-width: 600px) {
+
+  .match-history {
+
+    margin-top: 30px;
+
+  }
+
+  .match-card {
+
+    grid-template-columns: 76px minmax(0, 1fr) 60px;
+
+    gap: 12px;
+
+    padding: 13px;
+
+  }
+
+  .match-map-image {
+
+    width: 76px;
+
+    height: 68px;
+
+  }
+
+  .match-result > strong {
+
+    font-size: 14px;
+
+  }
+
+  .match-result small {
+
+    font-size: 10px;
+
+  }
+
+  .match-agent img {
+
+    width: 38px;
+
+    height: 38px;
+
+  }
+
+  .match-kda {
+
+    grid-column: 2;
+
+    align-items: flex-start;
+
+  }
+
+  .match-extra-stats {
+
+    grid-column: 1 / -1;
+
+    padding-top: 14px;
+
+  }
+
+  .match-extra-stats strong {
+
+    font-size: 13px;
+
+  }
+
+  .match-extra-stats span {
+
+    font-size: 9px;
+
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .match-card,
+
+  .match-map-image img {
+
+    transition: none;
+
+  }
+
+  .match-card:hover {
+
+    transform: none;
+
+  }
+
+}
+
+/* ================================
+
+   MATCH ANALYTICS
+
+================================ */
+
+.match-analytics {
+
+  margin-top: 38px;
+
+  width: 100%;
+
+}
+
+.analytics-summary {
+
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 12px;
+
+  margin-bottom: 16px;
+
+}
+
+.analytics-card,
+
+.performance-chart-card {
+
+  min-width: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  border-radius: 10px;
+
+  background: #14141b;
+
+}
+
+.analytics-card {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  padding: 18px;
+
+}
+
+.analytics-card > span {
+
+  color: #a0a0b0;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+}
+
+.analytics-card > strong {
+
+  color: #f5f5f7;
+
+  font-size: 27px;
+
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.analytics-card > small {
+
+  color: #858596;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+
+}
+
+.win-rate-bar {
+
+  height: 5px;
+
+  overflow: hidden;
+
+  border-radius: 99px;
+
+  background: #343440;
+
+}
+
+.win-rate-bar span {
+
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #36d399;
+
+}
+
+.performance-chart-card {
+
+  padding: 22px;
+
+}
+
+.chart-heading {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-start;
+
+  gap: 16px;
+
+  margin-bottom: 24px;
+
+}
+
+.chart-heading h3 {
+
+  margin: 0 0 6px;
+
+  color: #f5f5f7;
+
+  font-size: 16px;
+
+}
+
+.chart-heading p {
+
+  margin: 0;
+
+  color: #858596;
+
+  font-size: 12px;
+
+}
+
+.chart-legend {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 14px;
+
+  color: #b5b5c2;
+
+  font-size: 11px;
+
+}
+
+.chart-legend span {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+}
+
+.chart-legend i {
+
+  display: inline-block;
+
+  width: 8px;
+
+  height: 8px;
+
+  border-radius: 50%;
+
+}
+
+.legend-kills {
+
+  background: #ff4655;
+
+}
+
+.legend-deaths {
+
+  background: #66a9ff;
+
+}
+
+.performance-chart {
+
+  display: grid;
+
+  grid-template-columns: 30px minmax(0, 1fr);
+
+  gap: 10px;
+
+  height: 190px;
+
+}
+
+.chart-y-labels {
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: space-between;
+
+  align-items: flex-end;
+
+  padding-bottom: 0;
+
+  color: #858596;
+
+  font-size: 10px;
+
+}
+
+.chart-plot {
+
+  position: relative;
+
+  min-width: 0;
+
+  height: 100%;
+
+}
+
+.chart-grid-line {
+
+  position: absolute;
+
+  left: 0;
+
+  right: 0;
+
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+
+}
+
+.chart-grid-top {
+
+  top: 0;
+
+}
+
+.chart-grid-middle {
+
+  top: 50%;
+
+}
+
+.chart-grid-bottom {
+
+  bottom: 0;
+
+}
+
+.chart-svg {
+
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+
+  height: 100%;
+
+  overflow: visible;
+
+}
+
+.chart-line {
+
+  fill: none;
+
+  stroke-width: 1.5;
+
+  vector-effect: non-scaling-stroke;
+
+  stroke-linecap: round;
+
+  stroke-linejoin: round;
+
+}
+
+.chart-line-kills {
+
+  stroke: #ff4655;
+
+}
+
+.chart-line-deaths {
+
+  stroke: #66a9ff;
+
+}
+
+.chart-x-labels {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  margin: 10px 0 0 40px;
+
+  color: #858596;
+
+  font-size: 10px;
+
+}
+
+@media (max-width: 850px) {
+
+  .analytics-summary {
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  }
+
+}
+
+@media (max-width: 500px) {
+
+  .analytics-summary {
+
+    gap: 8px;
+
+  }
+
+  .analytics-card {
+
+    padding: 13px;
+
+  }
+
+  .analytics-card > strong {
+
+    font-size: 23px;
+
+  }
+
+  .performance-chart-card {
+
+    padding: 15px;
+
+  }
+
+  .chart-heading {
+
+    flex-direction: column;
+
+    gap: 12px;
+
+  }
+
+  .performance-chart {
+
+    height: 160px;
+
+  }
+
+}
