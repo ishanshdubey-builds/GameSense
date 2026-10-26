@@ -1,9 +1,13 @@
 
-const API_BASE = "/api/valorant";
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 async function request(endpoint, params = {}) {
+  const base = API_BASE
+    ? `${API_BASE}/api/valorant`
+    : "/api/valorant";
+
   const url = new URL(
-    `${API_BASE}/${endpoint}`,
+    `${base}/${endpoint}`,
     window.location.origin
   );
 
@@ -17,7 +21,9 @@ async function request(endpoint, params = {}) {
   const result = await response.json();
 
   if (!response.ok || !result.success) {
-    throw new Error(result.message || "GameSense API request failed.");
+    throw new Error(
+      result.message || "GameSense API request failed."
+    );
   }
 
   return result.data;
