@@ -61,3 +61,9 @@ export function getPlayerProfile(playerId) {
 export function getPlayerMatches(playerId) {
   return request("matches", { playerId });
 }
+
+export function getMatchDetails(matchId, affinity = "ap") {
+  return request(`match/${encodeURIComponent(matchId)}`, {
+    affinity,
+  });
+}

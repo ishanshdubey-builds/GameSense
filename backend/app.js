@@ -9,14 +9,18 @@ const valorantRoutes = require("./modules/players/players.routes");
 const app = express();
 
 // Allow requests from the deployed GameSense frontend
+
 app.use(
   cors({
     origin: [
       "https://game-sense-silk.vercel.app",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
     ],
     methods: ["GET", "HEAD", "OPTIONS"],
   })
 );
+
 
 app.use(express.json());
 

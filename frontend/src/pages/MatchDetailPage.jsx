@@ -1,104 +1,29 @@
-
-import { useEffect, useState } from "react";
-import {
-  Link,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
-import { getPlayerMatches } from "../services/valorantApi";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { getMatchDetails } from "../services/valorantApi";
 
 const TABS = ["Scoreboard", "Performance", "Economy", "Rounds", "Duels"];
 
-const SCOREBOARD_STATS = [
-  { label: "KILLS", key: "kills" },
-  { label: "DEATHS", key: "deaths" },
-  { label: "ASSISTS", key: "assists" },
-  { label: "ACS", key: "scorePerRound" },
-  { label: "K/D", key: "kdRatio" },
-  { label: "DAMAGE", key: "damage" },
-  { label: "ADR", key: "damagePerRound" },
-  { label: "HEADSHOT %", key: "headshotsPercentage" },
-  { label: "KAST", key: "kast" },
-  { label: "FIRST KILLS", key: "firstBloods" },
-  { label: "FIRST DEATHS", key: "firstDeaths" },
-  { label: "TRADES", key: "traded" },
-  { label: "SURVIVED", key: "survived" },
-  { label: "CLUTCHES", key: "clutches" },
-  { label: "PLANTS", key: "plants" },
-  { label: "DEFUSES", key: "defuses" },
-  { label: "HEADSHOTS", key: "headshots" },
-  { label: "BODY SHOTS", key: "shotsBody" },
-  { label: "LEG SHOTS", key: "shotsLegs" },
-  { label: "ECON RATING", key: "econRating" },
-];
-
-const TAB_INFO = {
-  Economy: {
-    title: "Economy analysis",
-    description:
-      "Round-by-round credits, purchases, loadout values and economy trends belong here.",
-    required:
-      "The current match-history response has not yet been verified to include round-level economy data.",
-  },
-  Rounds: {
-    title: "Round-by-round breakdown",
-    description:
-      "Explore each round's outcome, attack and defense performance, and key events.",
-    required:
-      "Round results and event timelines are not available in the match data currently loaded by this page.",
-  },
-  Duels: {
-    title: "Duel analysis",
-    description:
-      "Compare your encounters with individual opponents and identify difficult matchups.",
-    required:
-      "Opponent encounter records are needed. Your individual K/D/A alone cannot establish who you won or lost duels against.",
-  },
-};
-
-function getOverview(match) {
-  return match?.segments?.find(
-    (segment) => segment.type === "overview"
-  );
+function number(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function getValue(stats, key) {
-  const stat = stats?.[key];
-  const value = stat?.displayValue ?? stat?.value;
+function fmt(value, digits = 0) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "string") return value;
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
 
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-
-  if (typeof value === "number" && !Number.isFinite(value)) {
-    return null;
-  }
-
-  return value;
+  return value.toLocaleString("en-IN", {
+    maximumFractionDigits: digits,
+  });
 }
 
-function formatValue(value) {
-  if (value === null || value === undefined || value === "") {
-    return "—";
-  }
+function dateLabel(value) {
+  if (!value) return "Date unavailable";
 
-  if (typeof value === "number") {
-    return Number.isInteger(value)
-      ? value.toLocaleString("en-IN")
-      : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-  }
-
-  return String(value);
-}
-
-function formatMatchDate(timestamp) {
-  if (!timestamp) return "Date unavailable";
-
-  const date = new Date(timestamp);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
-  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
 
   return date.toLocaleString("en-IN", {
     day: "numeric",
@@ -109,201 +34,536 @@ function formatMatchDate(timestamp) {
   });
 }
 
-function StatCard({ label, value }) {
+function playerLabel(player) {
+  if (!player) return "Unknown player";
+
+  return `${player.name || "Unknown"}${
+    player.tag ? `#${player.tag}` : ""
+  }`;
+}
+
+function headshotPercentage(player) {
+  const stats = player?.stats || {};
+  const shots =
+    number(stats.headshots) +
+    number(stats.bodyshots) +
+    number(stats.legshots);
+
+  return shots > 0 ? (number(stats.headshots) / shots) * 100 : null;
+}
+
+function kdRatio(player) {
+  const kills = number(player?.stats?.kills);
+  const deaths = number(player?.stats?.deaths);
+
+  return deaths > 0 ? kills / deaths : kills;
+}
+
+function StatCard({ label, value, suffix = "", digits = 0 }) {
   return (
     <article className="analyzer-stat">
       <span>{label}</span>
-      <strong>{formatValue(value)}</strong>
+      <strong>
+        {value === null || value === undefined || value === ""
+          ? "—"
+          : `${fmt(value, digits)}${suffix}`}
+      </strong>
     </article>
   );
 }
 
-function ScoreboardTab({ stats, playerId, agentName }) {
-  const availableStats = SCOREBOARD_STATS.filter(
-    ({ key }) => getValue(stats, key) !== null
+/* -------------------- SCOREBOARD -------------------- */
+
+function ScoreboardTab({ players, teams, rounds }) {
+  const roundCount = Math.max(rounds.length, 1);
+
+  const firstBloods = {};
+
+  rounds.forEach((round) => {
+    const puuid = round.first_blood?.puuid;
+
+    if (puuid) {
+      firstBloods[puuid] = (firstBloods[puuid] || 0) + 1;
+    }
+  });
+
+  const orderedTeams = ["Blue", "Red"]
+    .map((id) => teams.find((team) => team.team_id === id))
+    .filter(Boolean);
+
+  teams.forEach((team) => {
+    if (!orderedTeams.some((item) => item.team_id === team.team_id)) {
+      orderedTeams.push(team);
+    }
+  });
+
+  return (
+    <div className="analyzer-panel">
+      <div className="analyzer-section-title">
+        <div>
+          <p className="analyzer-kicker">MATCH STATISTICS</p>
+          <h3>Full scoreboard</h3>
+        </div>
+        <span>
+          {players.length} players · {rounds.length} rounds
+        </span>
+      </div>
+
+      {orderedTeams.map((team) => (
+        <section className="analyzer-stat-group" key={team.team_id}>
+          <h4>
+            {team.team_id} Team · {team.rounds?.won ?? "—"} rounds won
+            {team.won ? " · WINNER" : ""}
+          </h4>
+
+          <div className="match-scoreboard-table-wrap">
+            <table className="match-scoreboard-table">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Score/Round*</th>
+                  <th>K</th>
+                  <th>D</th>
+                  <th>A</th>
+                  <th>K/D</th>
+                  <th>Damage/Round*</th>
+                  <th>HS%</th>
+                  <th>First Kills</th>
+                  <th>Damage</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {players
+                  .filter((player) => player.team_id === team.team_id)
+                  .sort(
+                    (a, b) =>
+                      number(b.stats?.score) - number(a.stats?.score)
+                  )
+                  .map((player) => {
+                    const stats = player.stats || {};
+                    const hs = headshotPercentage(player);
+
+                    return (
+                      <tr key={player.puuid || playerLabel(player)}>
+                        <td>
+                          <span className="match-player-cell">
+                            {player.agent?.name && (
+                              <span className="match-agent-name">
+                                {player.agent.name}
+                              </span>
+                            )}
+                            <strong>{playerLabel(player)}</strong>
+                          </span>
+                        </td>
+
+                        <td>{fmt(number(stats.score) / roundCount)}</td>
+                        <td>{fmt(stats.kills)}</td>
+                        <td>{fmt(stats.deaths)}</td>
+                        <td>{fmt(stats.assists)}</td>
+                        <td>{fmt(kdRatio(player), 2)}</td>
+                        <td>
+                          {fmt(number(stats.damage?.dealt) / roundCount)}
+                        </td>
+                        <td>{hs === null ? "—" : `${fmt(hs, 1)}%`}</td>
+                        <td>{fmt(firstBloods[player.puuid] || 0)}</td>
+                        <td>{fmt(stats.damage?.dealt)}</td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))}
+
+      <p className="analyzer-note">
+        *Score per round and damage per round are calculated from the
+        provider's score and damage totals. They may differ from Tracker.gg's
+        ACS and ADR calculations. KAST is not included because it was not
+        confirmed in the returned data.
+      </p>
+    </div>
   );
+}
+
+/* -------------------- PERFORMANCE -------------------- */
+
+function PerformanceTab({ players, selectedPlayerId }) {
+  const player =
+    players.find((item) => item.puuid === selectedPlayerId) || players[0];
+
+  if (!player) {
+    return (
+      <div className="analyzer-panel">
+        <p className="analyzer-empty">No player statistics available.</p>
+      </div>
+    );
+  }
+
+  const stats = player.stats || {};
+  const hs = headshotPercentage(player);
+
+  const cards = [
+    { label: "Combat Score", value: stats.score },
+    { label: "Kills", value: stats.kills },
+    { label: "Deaths", value: stats.deaths },
+    { label: "Assists", value: stats.assists },
+    { label: "K/D", value: kdRatio(player), digits: 2 },
+    { label: "Damage Dealt", value: stats.damage?.dealt },
+    { label: "Damage Received", value: stats.damage?.received },
+    { label: "Headshots", value: stats.headshots },
+    { label: "Body Shots", value: stats.bodyshots },
+    { label: "Leg Shots", value: stats.legshots },
+    {
+      label: "Headshot %",
+      value: hs,
+      suffix: hs === null ? "" : "%",
+      digits: 1,
+    },
+    { label: "Plants", value: stats.plants },
+    { label: "Defuses", value: stats.defuses },
+    { label: "Performance Rating", value: player.performance?.score },
+    { label: "Rank", value: player.tier?.name },
+  ];
 
   return (
     <div className="analyzer-panel">
       <div className="analyzer-player-strip">
         <div>
           <p className="analyzer-kicker">PLAYER PERFORMANCE</p>
-          <h2>{playerId}</h2>
-          <span>{agentName || "Agent unavailable"}</span>
+          <h2>{playerLabel(player)}</h2>
+          <span>
+            {player.agent?.name || "Agent unavailable"} ·{" "}
+            {player.tier?.name || "Rank unavailable"}
+          </span>
         </div>
 
         <div className="analyzer-kda">
           <span>K / D / A</span>
           <strong>
-            {formatValue(getValue(stats, "kills"))} /{" "}
-            {formatValue(getValue(stats, "deaths"))} /{" "}
-            {formatValue(getValue(stats, "assists"))}
+            {number(stats.kills)} / {number(stats.deaths)} /{" "}
+            {number(stats.assists)}
           </strong>
         </div>
       </div>
 
-      <div className="analyzer-section-title">
-        <div>
-          <p className="analyzer-kicker">MATCH STATISTICS</p>
-          <h3>Your scoreboard</h3>
-        </div>
-        <span>{availableStats.length} stats available</span>
-      </div>
-
-      {availableStats.length > 0 ? (
-        <div className="analyzer-stats-grid">
-          {availableStats.map(({ label, key }) => (
+      <div className="analyzer-stats-grid">
+        {cards
+          .filter(
+            (item) => item.value !== null && item.value !== undefined
+          )
+          .map((item) => (
             <StatCard
-              key={key}
-              label={label}
-              value={getValue(stats, key)}
+              key={item.label}
+              label={item.label}
+              value={item.value}
+              suffix={item.suffix || ""}
+              digits={item.digits || 0}
             />
           ))}
-        </div>
-      ) : (
-        <p className="analyzer-empty">
-          No individual statistics were returned for this match.
-        </p>
-      )}
+      </div>
 
-      <p className="analyzer-note">
-        This is your individual scoreboard, not the complete ten-player
-        scoreboard. Team rows require match-wide player statistics from
-        the provider.
-      </p>
+      {player.performance?.breakdown && (
+        <section className="analyzer-stat-group">
+          <h4>Performance Breakdown</h4>
+
+          <div className="analyzer-stats-grid">
+            {Object.entries(player.performance.breakdown).map(
+              ([key, value]) => (
+                <StatCard
+                  key={key}
+                  label={key.replaceAll("_", " ")}
+                  value={value}
+                  digits={2}
+                />
+              )
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
-function PerformanceTab({ stats }) {
-  const groups = [
-    {
-      title: "Combat",
-      keys: ["kills", "deaths", "assists", "kdRatio", "scorePerRound"],
-    },
-    {
-      title: "Accuracy and damage",
-      keys: [
-        "headshots",
-        "headshotsPercentage",
-        "shotsBody",
-        "shotsLegs",
-        "damage",
-        "damagePerRound",
-        "damageReceived",
-        "damageDelta",
-        "damageDeltaPerRound",
-      ],
-    },
-    {
-      title: "Round impact",
-      keys: [
-        "kast",
-        "firstBloods",
-        "firstDeaths",
-        "traded",
-        "survived",
-        "clutches",
-        "clutchLosses",
-        "plants",
-        "defuses",
-        "ultimateCasts",
-      ],
-    },
-  ];
+/* -------------------- ECONOMY -------------------- */
 
-  const labels = {
-    kills: "Kills",
-    deaths: "Deaths",
-    assists: "Assists",
-    kdRatio: "K/D ratio",
-    scorePerRound: "Score per round",
-    headshots: "Headshots",
-    headshotsPercentage: "Headshot %",
-    shotsBody: "Body shots",
-    shotsLegs: "Leg shots",
-    damage: "Damage dealt",
-    damagePerRound: "Damage per round",
-    damageReceived: "Damage received",
-    damageDelta: "Damage delta",
-    damageDeltaPerRound: "Damage delta per round",
-    kast: "KAST",
-    firstBloods: "First kills",
-    firstDeaths: "First deaths",
-    traded: "Kills traded",
-    survived: "Rounds survived",
-    clutches: "Clutches won",
-    clutchLosses: "Clutches lost",
-    plants: "Spike plants",
-    defuses: "Spike defuses",
-    ultimateCasts: "Ultimate casts",
-  };
+function EconomyTab({ rounds, selectedPlayerId }) {
+  const rows = rounds.map((round, index) => {
+    const playerRound = (round.stats || []).find(
+      (item) => item.player?.puuid === selectedPlayerId
+    );
+
+    return {
+      roundNumber: number(round.id) + 1 || index + 1,
+      winner: round.winning_team,
+      result: round.result,
+      economy: playerRound?.economy,
+    };
+  });
 
   return (
     <div className="analyzer-panel">
       <div className="analyzer-section-title">
         <div>
-          <p className="analyzer-kicker">PERFORMANCE REPORT</p>
-          <h3>Combat breakdown</h3>
+          <p className="analyzer-kicker">ECONOMY ANALYSIS</p>
+          <h3>Round-by-round loadout</h3>
         </div>
+        <span>{rows.length} rounds</span>
       </div>
 
-      {groups.map((group) => {
-        const available = group.keys.filter(
-          (key) => getValue(stats, key) !== null
-        );
+      <div className="match-scoreboard-table-wrap">
+        <table className="match-scoreboard-table">
+          <thead>
+            <tr>
+              <th>Round</th>
+              <th>Winner</th>
+              <th>Result</th>
+              <th>Weapon</th>
+              <th>Loadout Value</th>
+              <th>Remaining Credits</th>
+              <th>Armor</th>
+            </tr>
+          </thead>
 
-        if (available.length === 0) return null;
-
-        return (
-          <section className="analyzer-stat-group" key={group.title}>
-            <h4>{group.title}</h4>
-            <div className="analyzer-stats-grid">
-              {available.map((key) => (
-                <StatCard
-                  key={key}
-                  label={labels[key] || key}
-                  value={getValue(stats, key)}
-                />
-              ))}
-            </div>
-          </section>
-        );
-      })}
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.roundNumber}>
+                <td>{row.roundNumber}</td>
+                <td>{row.winner || "—"}</td>
+                <td>{row.result || "—"}</td>
+                <td>{row.economy?.weapon?.name || "—"}</td>
+                <td>
+                  {row.economy?.loadout_value == null
+                    ? "—"
+                    : fmt(row.economy.loadout_value)}
+                </td>
+                <td>
+                  {row.economy?.remaining == null
+                    ? "—"
+                    : fmt(row.economy.remaining)}
+                </td>
+                <td>{row.economy?.armor?.name || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <p className="analyzer-note">
-        Missing provider statistics are omitted. Percentages and values
-        are displayed using the provider's reported format.
+        Economy values depend on which round-level fields the provider returns.
+        Missing values are displayed as dashes.
       </p>
     </div>
   );
 }
 
-function UnavailableTab({ tab }) {
-  const info = TAB_INFO[tab];
+/* -------------------- ROUNDS -------------------- */
+
+function RoundsTab({ rounds, selectedPlayerId }) {
+  if (!rounds.length) {
+    return (
+      <div className="analyzer-panel">
+        <p className="analyzer-empty">
+          No round data was returned for this match.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="analyzer-panel analyzer-unavailable">
-      <div className="analyzer-unavailable-icon" aria-hidden="true">
-        {tab === "Economy" ? "₵" : tab === "Rounds" ? "◷" : "⚔"}
+    <div className="analyzer-panel">
+      <div className="analyzer-section-title">
+        <div>
+          <p className="analyzer-kicker">ROUND ANALYSIS</p>
+          <h3>Round Timeline</h3>
+        </div>
+        <span>{rounds.length} rounds</span>
       </div>
-      <p className="analyzer-kicker">{tab.toUpperCase()} ANALYSIS</p>
-      <h3>{info.title}</h3>
-      <p>{info.description}</p>
-      <div className="analyzer-data-requirement">
-        <strong>Data needed</strong>
-        <span>{info.required}</span>
+
+      <div className="match-round-list">
+        {rounds.map((round, index) => {
+          const playerRound = (round.stats || []).find(
+            (item) => item.player?.puuid === selectedPlayerId
+          );
+
+          const firstBlood = round.first_blood;
+
+          return (
+            <article
+              className="match-round-card"
+              key={round.id ?? index}
+            >
+              <div className="match-round-heading">
+                <strong>
+                  Round {number(round.id) + 1 || index + 1}
+                </strong>
+                <span>{round.winning_team || "Winner unavailable"}</span>
+                <span>{round.result || "Result unavailable"}</span>
+              </div>
+
+              <div className="match-round-details">
+                <span>
+                  First Blood:{" "}
+                  {firstBlood
+                    ? `${firstBlood.name || "Unknown"}${
+                        firstBlood.tag ? `#${firstBlood.tag}` : ""
+                      }`
+                    : "Not recorded"}
+                </span>
+
+                <span>
+                  Spike Plant:{" "}
+                  {round.plant
+                    ? `${round.plant.site || "Site unknown"} · ${
+                        round.plant.player?.name || "Unknown player"
+                      }`
+                    : "Not recorded"}
+                </span>
+
+                <span>
+                  Defuse: {round.defuse?.player?.name || "Not recorded"}
+                </span>
+
+                <span>
+                  Selected Player Kills / Headshots:{" "}
+                  {playerRound
+                    ? `${fmt(playerRound.stats?.kills)} / ${fmt(
+                        playerRound.stats?.headshots
+                      )}`
+                    : "No player round stats"}
+                </span>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function MatchDetailPage() {
+/* -------------------- DUELS -------------------- */
+
+function DuelsTab({ rounds, players, selectedPlayerId }) {
+  const selectedPlayer = players.find(
+    (player) => player.puuid === selectedPlayerId
+  );
+
+  const selectedTeamId = selectedPlayer?.team_id;
+  const totals = {};
+
+  rounds.forEach((round) => {
+    (round.stats || []).forEach((source) => {
+      if (source.player?.puuid !== selectedPlayerId) return;
+
+      (source.damage_events || []).forEach((event) => {
+        const target = event.player;
+
+        if (!target?.puuid) return;
+
+        if (!totals[target.puuid]) {
+          totals[target.puuid] = {
+            puuid: target.puuid,
+            name: playerLabel(target),
+            team: target.team || "—",
+            damage: 0,
+            headshots: 0,
+            bodyshots: 0,
+            legshots: 0,
+            roundIds: new Set(),
+          };
+        }
+
+        const current = totals[target.puuid];
+
+        current.damage += number(event.damage);
+        current.headshots += number(event.headshots);
+        current.bodyshots += number(event.bodyshots);
+        current.legshots += number(event.legshots);
+        current.roundIds.add(round.id);
+      });
+    });
+  });
+
+  const opponents = Object.values(totals)
+    .map((item) => ({
+      ...item,
+      roundsInvolved: item.roundIds.size,
+    }))
+    .filter((item) => {
+      const player = players.find(
+        (candidate) => candidate.puuid === item.puuid
+      );
+
+      return player && player.team_id !== selectedTeamId;
+    })
+    .sort((a, b) => b.damage - a.damage);
+
+  return (
+    <div className="analyzer-panel">
+      <div className="analyzer-section-title">
+        <div>
+          <p className="analyzer-kicker">DUEL ANALYSIS</p>
+          <h3>Damage Against Opponents</h3>
+        </div>
+        <span>{opponents.length} opponents with recorded damage</span>
+      </div>
+
+      {opponents.length > 0 ? (
+        <div className="match-scoreboard-table-wrap">
+          <table className="match-scoreboard-table">
+            <thead>
+              <tr>
+                <th>Opponent</th>
+                <th>Team</th>
+                <th>Damage</th>
+                <th>Headshots</th>
+                <th>Body Shots</th>
+                <th>Leg Shots</th>
+                <th>Rounds Involved</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {opponents.map((opponent) => (
+                <tr key={opponent.puuid}>
+                  <td>{opponent.name}</td>
+                  <td>{opponent.team}</td>
+                  <td>{fmt(opponent.damage)}</td>
+                  <td>{fmt(opponent.headshots)}</td>
+                  <td>{fmt(opponent.bodyshots)}</td>
+                  <td>{fmt(opponent.legshots)}</td>
+                  <td>{fmt(opponent.roundsInvolved)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="analyzer-empty">
+          No opponent damage events were recorded for the selected player.
+        </p>
+      )}
+
+      <p className="analyzer-note">
+        This summarizes recorded damage events. It does not claim a duel win
+        unless the provider explicitly supplies that event.
+      </p>
+    </div>
+  );
+}
+
+/* -------------------- MAIN PAGE -------------------- */
+
+export default function MatchDetailPage() {
   const { matchId } = useParams();
   const [searchParams] = useSearchParams();
+
   const playerId = searchParams.get("playerId") || "";
+  const affinity = searchParams.get("affinity") || "ap";
 
   const [match, setMatch] = useState(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [activeTab, setActiveTab] = useState("Scoreboard");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -312,50 +572,84 @@ function MatchDetailPage() {
     let cancelled = false;
 
     async function loadMatch() {
-      if (!playerId) {
-        setError("Player ID is missing. Return to the profile and open a match.");
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setError("");
       setMatch(null);
 
       try {
-        const data = await getPlayerMatches(playerId);
-        const found = (data.matches ?? []).find(
-          (item) => String(item.attributes?.id) === matchId
-        );
+        const response = await getMatchDetails(matchId, affinity);
+        const payload = response?.data ?? response;
 
-        if (!found) {
+        if (!payload?.metadata || !Array.isArray(payload.players)) {
           throw new Error(
-            "This match was not found in the player's currently available match history."
+            "The match API response did not contain match metadata and players."
           );
         }
 
-        if (!cancelled) setMatch(found);
-      } catch (err) {
+        if (cancelled) return;
+
+        setMatch(payload);
+
+        const matchingPlayer = payload.players.find(
+          (player) =>
+            `${player.name || ""}#${player.tag || ""}`.toLowerCase() ===
+            playerId.toLowerCase()
+        );
+
+        const matchingName = payload.players.find(
+          (player) =>
+            player.name?.toLowerCase() === playerId.toLowerCase()
+        );
+
+        const defaultPlayer =
+          matchingPlayer || matchingName || payload.players[0];
+
+        setSelectedPlayerId(defaultPlayer?.puuid || "");
+      } catch (loadError) {
         if (!cancelled) {
-          setError(err.message || "Could not load match details.");
+          setError(
+            loadError.message || "Could not load full match details."
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
-    loadMatch();
+    if (!matchId) {
+      setError("Match ID is missing from the URL.");
+      setLoading(false);
+    } else {
+      loadMatch();
+    }
 
     return () => {
       cancelled = true;
     };
-  }, [matchId, playerId]);
+  }, [matchId, playerId, affinity]);
 
-  const overview = getOverview(match);
-  const metadata = match?.metadata ?? {};
-  const player = overview?.metadata ?? {};
-  const stats = overview?.stats ?? {};
-  const won = metadata.result === "victory";
+  const players = match?.players || [];
+  const teams = match?.teams || [];
+  const rounds = match?.rounds || [];
+  const metadata = match?.metadata || {};
+
+  const selectedPlayer = useMemo(
+    () =>
+      players.find((player) => player.puuid === selectedPlayerId) ||
+      players[0],
+    [players, selectedPlayerId]
+  );
+
+  const selectedTeam = teams.find(
+    (team) => team.team_id === selectedPlayer?.team_id
+  );
+
+  const won = selectedTeam?.won === true;
+  const mapName = metadata.map?.name || "Unknown Map";
+
+  const roundScore = teams.length
+    ? teams.map((team) => team.rounds?.won ?? 0).join(" : ")
+    : "—";
 
   return (
     <section className="match-analyzer">
@@ -366,7 +660,7 @@ function MatchDetailPage() {
       {loading && (
         <div className="message loading-message" role="status">
           <span className="spinner" />
-          Loading match details...
+          Loading full match details...
         </div>
       )}
 
@@ -379,40 +673,49 @@ function MatchDetailPage() {
       {match && !loading && !error && (
         <>
           <header className="analyzer-match-header">
-            {metadata.mapImageUrl && (
-              <img
-                className="analyzer-map-image"
-                src={metadata.mapImageUrl}
-                alt={metadata.mapName || "VALORANT map"}
-              />
-            )}
-
             <div className="analyzer-match-main">
               <span className="analyzer-mode">
-                {metadata.modeName || "VALORANT"} MATCH
+                {metadata.queue?.name || "VALORANT"} MATCH
               </span>
-              <h1>{metadata.mapName || "Unknown map"}</h1>
-              <span>{formatMatchDate(metadata.timestamp)}</span>
+
+              <h1>{mapName}</h1>
+              <span>{dateLabel(metadata.started_at)}</span>
             </div>
 
             <div className="analyzer-result-block">
               <span className={won ? "result-win" : "result-loss"}>
                 {won ? "VICTORY" : "DEFEAT"}
               </span>
-              <strong>
-                {metadata.roundsWon ?? "—"} : {metadata.roundsLost ?? "—"}
-              </strong>
-              <small>Round score, if provided</small>
+              <strong>{roundScore}</strong>
+              <small>Team round wins</small>
             </div>
 
             <div className="analyzer-agent-block">
-              {player.agentImageUrl && (
-                <img
-                  src={player.agentImageUrl}
-                  alt={player.agentName || "Agent"}
-                />
-              )}
-              <strong>{player.agentName || "Unknown agent"}</strong>
+              <label htmlFor="match-player-select">
+                Selected Player
+              </label>
+
+              <select
+                id="match-player-select"
+                value={selectedPlayerId}
+                onChange={(event) =>
+                  setSelectedPlayerId(event.target.value)
+                }
+              >
+                {players.map((player) => (
+                  <option
+                    key={player.puuid}
+                    value={player.puuid}
+                  >
+                    {playerLabel(player)} ·{" "}
+                    {player.agent?.name || "Agent"}
+                  </option>
+                ))}
+              </select>
+
+              <strong>
+                {selectedPlayer?.agent?.name || "Unknown Agent"}
+              </strong>
             </div>
           </header>
 
@@ -432,23 +735,42 @@ function MatchDetailPage() {
 
           {activeTab === "Scoreboard" && (
             <ScoreboardTab
-              stats={stats}
-              playerId={playerId}
-              agentName={player.agentName}
+              players={players}
+              teams={teams}
+              rounds={rounds}
             />
           )}
 
           {activeTab === "Performance" && (
-            <PerformanceTab stats={stats} />
+            <PerformanceTab
+              players={players}
+              selectedPlayerId={selectedPlayerId}
+            />
           )}
 
-          {TAB_INFO[activeTab] && (
-            <UnavailableTab tab={activeTab} />
+          {activeTab === "Economy" && (
+            <EconomyTab
+              rounds={rounds}
+              selectedPlayerId={selectedPlayerId}
+            />
+          )}
+
+          {activeTab === "Rounds" && (
+            <RoundsTab
+              rounds={rounds}
+              selectedPlayerId={selectedPlayerId}
+            />
+          )}
+
+          {activeTab === "Duels" && (
+            <DuelsTab
+              rounds={rounds}
+              players={players}
+              selectedPlayerId={selectedPlayerId}
+            />
           )}
         </>
       )}
     </section>
   );
 }
-
-export default MatchDetailPage;
