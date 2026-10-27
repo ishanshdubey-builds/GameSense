@@ -67,3 +67,14 @@ export function getMatchDetails(matchId, affinity = "ap") {
     affinity,
   });
 }
+
+export function getMatchCoaching(
+  matchId,
+  affinity = "ap",
+  playerId
+) {
+  return request(
+    `match/${encodeURIComponent(matchId)}/coach`,
+    { affinity, playerId }
+  );
+}

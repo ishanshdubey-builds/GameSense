@@ -3167,3 +3167,248 @@ a {
     font-size: 10px;
   }
 }
+
+
+.ai-coach-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ai-coach-player {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid var(--border-color, #30303a);
+  border-radius: 12px;
+}
+
+.ai-coach-player > span {
+  color: var(--text-secondary, #a3a3b3);
+  font-size: 13px;
+}
+
+.ai-coach-player strong {
+  font-size: 19px;
+}
+
+.ai-coach-generate-button {
+  align-self: flex-start;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: #8b5cf6;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-coach-generate-button:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.ai-coach-generate-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-coach-report {
+  padding: 22px;
+  border: 1px solid var(--border-color, #30303a);
+  border-radius: 12px;
+}
+
+.ai-coach-report h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+.ai-coach-report-text {
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-color, inherit);
+}
+
+@media (max-width: 600px) {
+  .ai-coach-report {
+    padding: 15px;
+  }
+
+  .ai-coach-generate-button {
+    width: 100%;
+  }
+}
+
+
+/* AI Coach report layout */
+.ai-coach-report {
+  margin-top: 8px;
+  padding: 24px;
+  border: 1px solid #2d3442;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #141b26 0%, #10151e 100%);
+  text-align: left;
+}
+
+.ai-coach-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #2d3442;
+}
+
+.ai-coach-report-header h3 {
+  margin: 5px 0 0;
+  font-size: 22px;
+}
+
+.ai-coach-badge {
+  padding: 6px 10px;
+  border: 1px solid #6941c6;
+  border-radius: 20px;
+  color: #c4a7ff;
+  background: #211735;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.ai-coach-report-text {
+  color: #d6dbe5;
+  font-size: 14px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+.ai-coach-report-text h1,
+.ai-coach-report-text h2,
+.ai-coach-report-text h3 {
+  color: #f5f6fb;
+  line-height: 1.4;
+  margin: 28px 0 12px;
+}
+
+.ai-coach-report-text h1 {
+  font-size: 23px;
+}
+
+.ai-coach-report-text h2 {
+  font-size: 19px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #2d3442;
+}
+
+.ai-coach-report-text h3 {
+  font-size: 16px;
+}
+
+.ai-coach-report-text p {
+  margin: 10px 0 16px;
+}
+
+.ai-coach-report-text ul,
+.ai-coach-report-text ol {
+  padding-left: 24px;
+  margin: 12px 0 20px;
+}
+
+.ai-coach-report-text li {
+  padding-left: 5px;
+  margin-bottom: 10px;
+}
+
+.ai-coach-report-text li::marker {
+  color: #a78bfa;
+}
+
+.ai-coach-report-text strong {
+  color: #ffffff;
+  font-weight: 750;
+}
+
+.ai-coach-report-text blockquote {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-left: 3px solid #8b5cf6;
+  background: #191c2b;
+  border-radius: 0 8px 8px 0;
+}
+
+.ai-coach-report-text hr {
+  border: 0;
+  border-top: 1px solid #2d3442;
+  margin: 22px 0;
+}
+
+.ai-coach-report-text > :first-child {
+  margin-top: 0;
+}
+
+.ai-coach-report-text > :last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+  .ai-coach-report {
+    padding: 16px;
+  }
+
+  .ai-coach-report-header h3 {
+    font-size: 19px;
+  }
+
+  .ai-coach-report-text {
+    font-size: 13px;
+    line-height: 1.8;
+  }
+}
+
+
+/* Compact AI coaching report */
+.ai-coach-report-text {
+  line-height: 1.7;
+  text-align: left;
+}
+
+.ai-coach-report-text h1,
+.ai-coach-report-text h2,
+.ai-coach-report-text h3 {
+  margin-top: 24px;
+  margin-bottom: 10px;
+}
+
+.ai-coach-report-text ol,
+.ai-coach-report-text ul {
+  padding-left: 24px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.ai-coach-report-text li {
+  margin-bottom: 7px;
+  padding-left: 3px;
+}
+
+.ai-coach-report-text li p {
+  margin: 4px 0;
+}
+
+.ai-coach-report-text p {
+  margin: 8px 0 12px;
+}
+
+.ai-coach-report-text > ol > li,
+.ai-coach-report-text > ul > li {
+  padding-left: 5px;
+}
+
+.ai-coach-report-text > :first-child {
+  margin-top: 0;
+}
+

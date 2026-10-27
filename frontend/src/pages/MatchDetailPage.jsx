@@ -1,8 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { getMatchDetails } from "../services/valorantApi";
+import ReactMarkdown from "react-markdown";
+import {
+  getMatchDetails,
+  getMatchCoaching,
+} from "../services/valorantApi";
 
-const TABS = ["Scoreboard", "Performance", "Economy", "Rounds", "Duels"];
+const TABS = [
+  "Scoreboard",
+  "Performance",
+  "Economy",
+  "Rounds",
+  "Duels",
+  "AI Coach",
+];
 
 function number(value) {
   const parsed = Number(value);
@@ -654,6 +665,132 @@ function DuelsTab({ rounds, players, selectedPlayerId }) {
   );
 }
 
+
+/* -------------------- AI-Coach PAGE -------------------- */
+
+function AICoachTab({
+  matchId,
+  affinity,
+  selectedPlayer,
+}) {
+  const [report, setReport] = useState("");
+  const [loadingCoach, setLoadingCoach] = useState(false);
+  const [coachError, setCoachError] = useState("");
+
+  async function generateReport() {
+    setLoadingCoach(true);
+    setCoachError("");
+    setReport("");
+
+    try {
+      const result = await getMatchCoaching(
+        matchId,
+        affinity,
+        selectedPlayer?.puuid
+      );
+
+      setReport(
+        result?.data?.coaching ||
+        result?.coaching ||
+        "The AI returned an empty report."
+      );
+    } catch (error) {
+      setCoachError(
+        error.message || "Could not generate coaching report."
+      );
+    } finally {
+      setLoadingCoach(false);
+    }
+  }
+
+  return (
+    <div className="analyzer-panel ai-coach-panel">
+      <div className="analyzer-section-title">
+        <div>
+          <p className="analyzer-kicker">GAMESENSE INTELLIGENCE</p>
+          <h3>AI Match Coach</h3>
+          <p>
+            Get match insights and a personalized practice plan.
+          </p>
+        </div>
+      </div>
+
+      <div className="ai-coach-player">
+        <span>Player to analyze</span>
+        <strong>
+          {selectedPlayer
+            ? `${selectedPlayer.name || "Unknown"}${
+                selectedPlayer.tag
+                  ? `#${selectedPlayer.tag}`
+                  : ""
+              }`
+            : "No player selected"}
+        </strong>
+        <span>
+          {selectedPlayer?.agent?.name || "Agent unavailable"}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        className="ai-coach-generate-button"
+        onClick={generateReport}
+        disabled={loadingCoach || !selectedPlayer}
+      >
+        {loadingCoach
+          ? "Analyzing match..."
+          : report
+          ? "Generate New Report"
+          : "Generate Coaching Report"}
+      </button>
+
+      {loadingCoach && (
+        <div className="message loading-message" role="status">
+          <span className="spinner" />
+          Reviewing match statistics and preparing coaching tips...
+        </div>
+      )}
+
+      {coachError && (
+        <div className="message error-message" role="alert">
+          {coachError}
+        </div>
+      )}
+
+      {report && !loadingCoach && (
+        
+<section className="ai-coach-report">
+  <div className="ai-coach-report-header">
+    <div>
+      <p className="analyzer-kicker">PERSONALIZED ANALYSIS</p>
+      <h3>Your Coaching Report</h3>
+    </div>
+    <span className="ai-coach-badge">AI GENERATED</span>
+  </div>
+
+  <div className="ai-coach-report-text">
+    <ReactMarkdown>{report}</ReactMarkdown>
+  </div>
+</section>
+
+      )}
+
+      {!report && !loadingCoach && !coachError && (
+        <p className="analyzer-empty">
+          Generate a report to see match insights, strengths,
+          improvement areas, and a practice plan.
+        </p>
+      )}
+
+      <p className="analyzer-note">
+        AI recommendations are based on the match data available
+        to GameSense. Missing data may limit the analysis.
+      </p>
+    </div>
+  );
+}
+
+
 /* -------------------- MAIN PAGE -------------------- */
 
 export default function MatchDetailPage() {
@@ -877,6 +1014,14 @@ export default function MatchDetailPage() {
               selectedPlayerId={selectedPlayerId}
             />
           )}
+
+          {activeTab === "AI Coach" && (
+  <AICoachTab
+    matchId={matchId}
+    affinity={affinity}
+    selectedPlayer={selectedPlayer}
+  />
+)}
         </>
       )}
     </section>
