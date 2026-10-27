@@ -14,6 +14,27 @@ async function fetchPlayerMatches(playerId) {
 }
 
 
+async function fetchMatchDetails(affinity, matchId) {
+    if (typeof affinity !== "string" || !affinity.trim()) {
+        const error = new Error("A match region/affinity is required.");
+        error.status = 400;
+        throw error;
+    }
+
+    if (typeof matchId !== "string" || !matchId.trim()) {
+        const error = new Error("A match ID is required.");
+        error.status = 400;
+        throw error;
+    }
+
+    return valorantClient.getMatchDetails(
+        affinity.trim().toLowerCase(),
+        matchId.trim()
+    );
+}
+
+
+
 function validatePlayerId(playerId) {
     if (typeof playerId !== "string") {
         const error = new Error(
@@ -39,7 +60,10 @@ function validatePlayerId(playerId) {
 }
 
 
+
 module.exports = {
     fetchPlayerProfile,
     fetchPlayerMatches,
+    fetchMatchDetails,
 };
+

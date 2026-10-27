@@ -42,7 +42,47 @@ async function getPlayerMatches(playerId) {
     return request("get_player_matches", { player_id: playerId });
 }
 
+
+async function getMatchDetails(affinity, matchId) {
+    const apiKey = process.env.HENRIKDEV_API_KEY;
+
+    if (!apiKey) {
+        throw new Error("HENRIKDEV_API_KEY is missing.");
+    }
+
+    const url =
+        `https://api.henrikdev.xyz/valorant/v4/match/${encodeURIComponent(affinity)}/${encodeURIComponent(matchId)}`;
+
+    const response = await fetch(url, {
+        method: "GET",
+        headers: {
+            Authorization: apiKey,
+            Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(20000),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            body?.errors?.[0]?.message ||
+            body?.message ||
+            `HenrikDev returned HTTP ${response.status}.`
+        );
+
+        error.status = response.status;
+        throw error;
+    }
+
+    return body;
+}
+
+
+
 module.exports = {
     getPlayerProfile,
     getPlayerMatches,
+    getMatchDetails,
 };
+

@@ -130,7 +130,46 @@ async function getMatches(req, res) {
 }
 
 
+async function getMatchDetails(req, res) {
+    try {
+        const { matchId } = req.params;
+        const affinity = req.query.affinity || "ap";
+
+        if (!matchId || !matchId.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide a match ID.",
+            });
+        }
+
+        const result = await valorantService.fetchMatchDetails(
+            affinity,
+            matchId
+        );
+
+        return res.json({
+            success: true,
+            data: result.data ?? result,
+        });
+    } catch (error) {
+        console.error(
+            "VALORANT match details lookup failed:",
+            error.message
+        );
+
+        return res.status(error.status || 502).json({
+            success: false,
+            message: error.message || "Could not retrieve match details.",
+        });
+    }
+}
+
+
+
+
 module.exports = {
     getProfile,
     getMatches,
+    getMatchDetails,
 };
+
