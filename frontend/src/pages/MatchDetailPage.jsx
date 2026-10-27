@@ -74,7 +74,7 @@ function StatCard({ label, value, suffix = "", digits = 0 }) {
 
 /* -------------------- SCOREBOARD -------------------- */
 
-function ScoreboardTab({ players, teams, rounds }) {
+function ScoreboardTab({ players, teams, rounds, selectedPlayerId, onSelectPlayer }) {
   const roundCount = Math.max(rounds.length, 1);
 
   const firstBloods = {};
@@ -145,7 +145,14 @@ function ScoreboardTab({ players, teams, rounds }) {
                     const hs = headshotPercentage(player);
 
                     return (
-                      <tr key={player.puuid || playerLabel(player)}>
+                      <tr
+  key={player.puuid || playerLabel(player)}
+  className={`scoreboard-player-row ${
+    player.puuid === selectedPlayerId ? "selected-player-row" : ""
+  }`}
+  onClick={() => onSelectPlayer(player.puuid)}
+  title={`View ${playerLabel(player)}'s performance`}
+>
                         <td>
                           <span className="match-player-cell">
                             {player.agent?.name && (
@@ -288,19 +295,47 @@ function PerformanceTab({ players, selectedPlayerId }) {
 
 /* -------------------- ECONOMY -------------------- */
 
+
 function EconomyTab({ rounds, selectedPlayerId }) {
   const rows = rounds.map((round, index) => {
     const playerRound = (round.stats || []).find(
       (item) => item.player?.puuid === selectedPlayerId
     );
 
+    const economy = playerRound?.economy;
+    const result = String(round.result || "").toLowerCase();
+
+    let resultClass = "economy-result";
+
+    if (result.includes("elimination")) {
+      resultClass += " economy-result-elimination";
+    } else if (result.includes("defuse")) {
+      resultClass += " economy-result-defuse";
+    } else if (result.includes("detonate")) {
+      resultClass += " economy-result-detonate";
+    }
+
     return {
-      roundNumber: number(round.id) + 1 || index + 1,
+      roundNumber:
+        round.id != null && Number.isFinite(Number(round.id))
+          ? Number(round.id) + 1
+          : index + 1,
       winner: round.winning_team,
       result: round.result,
-      economy: playerRound?.economy,
+      resultClass,
+      economy,
     };
   });
+
+  if (!rows.length) {
+    return (
+      <div className="analyzer-panel">
+        <p className="analyzer-empty">
+          No economy round data was returned for this match.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="analyzer-panel">
@@ -312,13 +347,13 @@ function EconomyTab({ rounds, selectedPlayerId }) {
         <span>{rows.length} rounds</span>
       </div>
 
-      <div className="match-scoreboard-table-wrap">
-        <table className="match-scoreboard-table">
+      <div className="match-scoreboard-table-wrap economy-table-wrap">
+        <table className="match-scoreboard-table economy-table">
           <thead>
             <tr>
               <th>Round</th>
               <th>Winner</th>
-              <th>Result</th>
+              <th>Round Result</th>
               <th>Weapon</th>
               <th>Loadout Value</th>
               <th>Remaining Credits</th>
@@ -329,21 +364,51 @@ function EconomyTab({ rounds, selectedPlayerId }) {
           <tbody>
             {rows.map((row) => (
               <tr key={row.roundNumber}>
-                <td>{row.roundNumber}</td>
-                <td>{row.winner || "—"}</td>
-                <td>{row.result || "—"}</td>
-                <td>{row.economy?.weapon?.name || "—"}</td>
+                <td>
+                  <strong>{row.roundNumber}</strong>
+                </td>
+
+                <td>
+                  <span
+                    className={
+                      row.winner
+                        ? `economy-team economy-team-${String(
+                            row.winner
+                          ).toLowerCase()}`
+                        : "economy-team"
+                    }
+                  >
+                    {row.winner || "—"}
+                  </span>
+                </td>
+
+                <td>
+                  <span className={row.resultClass}>
+                    {row.result || "Unavailable"}
+                  </span>
+                </td>
+
+                <td>
+                  <strong>
+                    {row.economy?.weapon?.name || "—"}
+                  </strong>
+                </td>
+
                 <td>
                   {row.economy?.loadout_value == null
                     ? "—"
                     : fmt(row.economy.loadout_value)}
                 </td>
+
                 <td>
                   {row.economy?.remaining == null
                     ? "—"
                     : fmt(row.economy.remaining)}
                 </td>
-                <td>{row.economy?.armor?.name || "—"}</td>
+
+                <td>
+                  {row.economy?.armor?.name || "—"}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -351,14 +416,16 @@ function EconomyTab({ rounds, selectedPlayerId }) {
       </div>
 
       <p className="analyzer-note">
-        Economy values depend on which round-level fields the provider returns.
-        Missing values are displayed as dashes.
+        Economy data depends on the fields returned by the match provider.
+        A dash means the corresponding value is unavailable.
       </p>
     </div>
   );
 }
 
+
 /* -------------------- ROUNDS -------------------- */
+
 
 function RoundsTab({ rounds, selectedPlayerId }) {
   if (!rounds.length) {
@@ -388,6 +455,12 @@ function RoundsTab({ rounds, selectedPlayerId }) {
           );
 
           const firstBlood = round.first_blood;
+          const roundNumber = Number.isFinite(Number(round.id))
+            ? Number(round.id) + 1
+            : index + 1;
+
+          const winner = round.winning_team;
+          const result = round.result;
 
           return (
             <article
@@ -395,44 +468,71 @@ function RoundsTab({ rounds, selectedPlayerId }) {
               key={round.id ?? index}
             >
               <div className="match-round-heading">
-                <strong>
-                  Round {number(round.id) + 1 || index + 1}
-                </strong>
-                <span>{round.winning_team || "Winner unavailable"}</span>
-                <span>{round.result || "Result unavailable"}</span>
+                <strong>Round {roundNumber}</strong>
+
+                <span
+                  className={
+                    winner
+                      ? `round-winner round-winner-${String(winner).toLowerCase()}`
+                      : "round-winner"
+                  }
+                >
+                  {winner ? `${winner} Team Won` : "Winner unavailable"}
+                </span>
+
+                <span>{result || "Result unavailable"}</span>
               </div>
 
               <div className="match-round-details">
-                <span>
-                  First Blood:{" "}
-                  {firstBlood
-                    ? `${firstBlood.name || "Unknown"}${
-                        firstBlood.tag ? `#${firstBlood.tag}` : ""
-                      }`
-                    : "Not recorded"}
-                </span>
+                <div className="round-detail-item">
+                  <span className="round-detail-label">
+                    First Blood
+                  </span>
+                  <strong>
+                    {firstBlood
+                      ? `${firstBlood.name || "Unknown"}${
+                          firstBlood.tag ? `#${firstBlood.tag}` : ""
+                        }`
+                      : "Not recorded"}
+                  </strong>
+                </div>
 
-                <span>
-                  Spike Plant:{" "}
-                  {round.plant
-                    ? `${round.plant.site || "Site unknown"} · ${
-                        round.plant.player?.name || "Unknown player"
-                      }`
-                    : "Not recorded"}
-                </span>
+                <div className="round-detail-item">
+                  <span className="round-detail-label">
+                    Spike Plant
+                  </span>
+                  <strong>
+                    {round.plant
+                      ? `${round.plant.site || "Site unknown"}${
+                          round.plant.player?.name
+                            ? ` · ${round.plant.player.name}`
+                            : ""
+                        }`
+                      : "Not recorded"}
+                  </strong>
+                </div>
 
-                <span>
-                  Defuse: {round.defuse?.player?.name || "Not recorded"}
-                </span>
+                <div className="round-detail-item">
+                  <span className="round-detail-label">
+                    Spike Defuse
+                  </span>
+                  <strong>
+                    {round.defuse?.player?.name || "Not recorded"}
+                  </strong>
+                </div>
 
-                <span>
-                  Selected Player Kills / Headshots:{" "}
-                  {playerRound
-                    ? `${fmt(playerRound.stats?.kills)} / ${fmt(
-                        playerRound.stats?.headshots
-                      )}`
-                    : "No player round stats"}
-                </span>
+                <div className="round-detail-item">
+                  <span className="round-detail-label">
+                    Your Round Stats
+                  </span>
+                  <strong>
+                    {playerRound
+                      ? `${fmt(playerRound.stats?.kills)} Kills · ${fmt(
+                          playerRound.stats?.headshots
+                        )} Headshots`
+                      : "Stats unavailable"}
+                  </strong>
+                </div>
               </div>
             </article>
           );
@@ -441,6 +541,7 @@ function RoundsTab({ rounds, selectedPlayerId }) {
     </div>
   );
 }
+
 
 /* -------------------- DUELS -------------------- */
 
@@ -733,13 +834,20 @@ export default function MatchDetailPage() {
             ))}
           </nav>
 
-          {activeTab === "Scoreboard" && (
-            <ScoreboardTab
-              players={players}
-              teams={teams}
-              rounds={rounds}
-            />
-          )}
+          
+{activeTab === "Scoreboard" && (
+  <ScoreboardTab
+    players={players}
+    teams={teams}
+    rounds={rounds}
+    selectedPlayerId={selectedPlayerId}
+    onSelectPlayer={(playerId) => {
+      setSelectedPlayerId(playerId);
+      setActiveTab("Performance");
+    }}
+  />
+)}
+
 
           {activeTab === "Performance" && (
             <PerformanceTab
