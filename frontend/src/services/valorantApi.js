@@ -17,12 +17,37 @@ async function request(endpoint, params = {}) {
     }
   }
 
-  const response = await fetch(url);
-  const result = await response.json();
+  let response;
+
+  try {
+    response = await fetch(url);
+  } catch {
+    throw new Error(
+      "Cannot connect to the GameSense API. Check that your backend is running."
+    );
+  }
+
+  const body = await response.text();
+
+  if (!body.trim()) {
+    throw new Error(
+      `The API returned an empty response (HTTP ${response.status}). Check the backend server.`
+    );
+  }
+
+  let result;
+
+  try {
+    result = JSON.parse(body);
+  } catch {
+    throw new Error(
+      `The API returned an invalid response (HTTP ${response.status}). Check the backend URL and server logs.`
+    );
+  }
 
   if (!response.ok || !result.success) {
     throw new Error(
-      result.message || "GameSense API request failed."
+      result.message || `GameSense API request failed (HTTP ${response.status}).`
     );
   }
 

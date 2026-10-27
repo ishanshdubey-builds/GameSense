@@ -154,6 +154,7 @@ function ValorantProfilePage() {
             matches={matches}
             loading={matchesLoading}
             error={matchesError}
+            playerId={riotId}
           />
         </section>
       )}

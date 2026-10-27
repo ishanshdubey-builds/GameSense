@@ -1,3 +1,4 @@
+import {Link} from "react-router-dom";
 
 function getOverview(match) {
   return match.segments?.find(
@@ -103,7 +104,12 @@ function MatchCard({ match }) {
   );
 }
 
-function MatchHistory({ matches = [], loading = false, error = "" }) {
+function MatchHistory({
+  matches = [],
+  loading = false,
+  error = "",
+  playerId = "",
+}) {
   return (
     <section className="match-history">
       <div className="section-heading">
@@ -138,12 +144,31 @@ function MatchHistory({ matches = [], loading = false, error = "" }) {
 
       {!loading && !error && matches.length > 0 && (
         <div className="match-list">
-          {matches.map((match) => (
-            <MatchCard
-              key={match.attributes?.id}
-              match={match}
-            />
-          ))}
+          {matches.map((match) => {
+  const matchId = match.attributes?.id;
+
+  if (!matchId || !playerId) {
+    return (
+      <MatchCard
+        key={matchId || `${match.metadata?.mapName}-${match.metadata?.timestamp}`}
+        match={match}
+      />
+    );
+  }
+
+  const search = new URLSearchParams({ playerId }).toString();
+
+  return (
+    <Link
+      className="match-card-link"
+      key={matchId}
+      to={`/match/${encodeURIComponent(matchId)}?${search}`}
+      aria-label={`View ${match.metadata?.mapName || "match"} details`}
+    >
+      <MatchCard match={match} />
+    </Link>
+  );
+})}
         </div>
       )}
 
